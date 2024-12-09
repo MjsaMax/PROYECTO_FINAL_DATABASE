@@ -1,6 +1,6 @@
-# Proyecto Colaborativo
+# PROYECTO FINAL DE BASE DE DATOS
 
-Este repositorio contiene los recursos y documentación relacionados con nuestro proyecto colaborativo, incluyendo acceso a Overleaf y Canva, así como un archivo de comandos.
+Continuacion de la base de datos creada previamente **app_taxi_db**.
 
 ---
 

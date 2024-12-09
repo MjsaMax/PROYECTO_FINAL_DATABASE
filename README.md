@@ -8,7 +8,7 @@ Continuacion de la base de datos creada previamente **app_taxi_db**.
 
 ### 📄 **Documento en Overleaf**
 Colaboración en Overleaf para la edición de documentos en LaTeX:  
-[Acceso al proyecto en Overleaf](https://www.overleaf.com/7824814178qzbnzmztjqkk#25dcc8)
+[Acceso al proyecto en Overleaf](https://www.overleaf.com/4499873165xcpfbkxndqnn#94ac90)
 
 ### 🎨 **Diseños en Canva**
 Colaboración en Canva para los diseños gráficos del proyecto:  

@@ -18,7 +18,7 @@ Colaboración en Canva para los diseños gráficos del proyecto:
 
 ## Archivos
 
-- **`comandosFINAL.txt`**: Archivo con los comandos finales utilizados en el proyecto.
+- **[`comandosFINAL.txt`](comandosFINAL.txt)**:: Archivo con los comandos finales utilizados en el proyecto.
 
 ---
 

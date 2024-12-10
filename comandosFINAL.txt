@@ -469,11 +469,95 @@ VALUES
 ('Taller Rápido Fix', 'Calle Progreso 1111', '555-9012'),
 ('AutoTech Pro', 'Av. Libertad 1212', '555-0123');
 
+-----------------------------REVISION DE TABLAS A NORMALIZAR----------------------------------
+
+--MODIFICACION DE LA TABLA PASAJERO Y LA CREACION DE LA TABLA DIRECCION
+CREATE TABLE direccion (
+    id_direccion SERIAL PRIMARY KEY,
+    direccion_completa VARCHAR(255) NOT NULL
+);
+
+INSERT INTO direccion (direccion_completa)
+SELECT DISTINCT direccion
+FROM pasajero;
+
+ALTER TABLE pasajero ADD COLUMN id_direccion INT;
+
+UPDATE pasajero
+SET id_direccion = (
+    SELECT id_direccion
+    FROM direccion
+    WHERE direccion.direccion_completa = pasajero.direccion
+);
+
+ALTER TABLE pasajero DROP COLUMN direccion;
+
+ALTER TABLE pasajero
+ADD FOREIGN KEY (id_direccion) REFERENCES direccion(id_direccion);
+
+--MODIFICACION DE LA TABLA PAGO Y LA CREACION DE LA TABLA METODO_PAGO
+CREATE TABLE metodo_pago (
+    id_metodo_pago SERIAL PRIMARY KEY,
+    descripcion VARCHAR(50) NOT NULL
+);
+
+INSERT INTO metodo_pago (descripcion)
+SELECT DISTINCT metodo_pago
+FROM pago;
+
+ALTER TABLE pago ADD COLUMN id_metodo_pago INT;
+
+UPDATE pago
+SET id_metodo_pago = (
+    SELECT id_metodo_pago
+    FROM metodo_pago
+    WHERE metodo_pago.descripcion = pago.metodo_pago
+);
+
+ALTER TABLE pago DROP COLUMN metodo_pago;
+
+ALTER TABLE pago
+ADD FOREIGN KEY (id_metodo_pago) REFERENCES metodo_pago(id_metodo_pago);
+
+--MODIFICACION DE LA TABLA CALIFICACION 
+ALTER TABLE calificacion
+ADD COLUMN id_calificacion SERIAL PRIMARY KEY;
+
+----------------------------PARA EL SIGUIENTE APARTADO SE AGREGARAN DATOS COMO PASAJEROS SIN VIAJES  o vehiculos sin viajes-------------
+INSERT INTO conductor (id_conductor, nombre, telefono, licencia)
+VALUES
+    (21, 'Carlos Mendoza', '987654321', 'LMN12345'),
+    (22, 'Laura Gómez', '876543210', 'OPQ67890'),
+    (23, 'Miguel Torres', '765432109', 'RST34567'),
+    (24, 'Ana Ruiz', '654321098', 'UVW98765');
+
+INSERT INTO vehiculo (id_conductor, marca, modelo, ano, placa)
+VALUES
+    (21, 'Toyota', 'Yaris', 2022, 'XYZ999'),
+    (22, 'Nissan', 'Altima', 2023, 'ABC123'),
+    (23, 'Chevrolet', 'Cruze', 2021, 'DEF456'),
+    (24, 'Hyundai', 'Elantra', 2020, 'GHI789');
+
+INSERT INTO direccion (direccion_completa)
+VALUES
+    ('Calle Armonía 321'),
+    ('Avenida Paz 654'),
+    ('Plaza Serenidad 987'),
+    ('Parque Estrella 432'),
+    ('Calle Libertad 876');
+
+INSERT INTO pasajero (nombre, telefono, correo_electronico, id_direccion)
+VALUES
+    ('Sofía Martínez', '900123456', 'sofia.martinez@example.com', 21),
+    ('Diego Castillo', '910654321', 'diego.castillo@example.com', 22),
+    ('Valeria Ortega', '920987654', 'valeria.ortega@example.com', 23),
+    ('Tomás Villanueva', '930567890', 'tomas.villanueva@example.com', 24),
+    ('Camila Mendoza', '940345678', 'camila.mendoza@example.com', 25);
 
 ----------------------------CONSULTAS AVANZADAS CON JOIN--------------------------------------
-
-
-  SELECT 
+-------------------NATURAL JOIN-------------
+--Informacion del viaje datos como origen, destino y calificacion
+SELECT 
     viaje.id_viaje, 
     viaje.origen, 
     viaje.destino, 
@@ -482,46 +566,127 @@ FROM
     viaje 
 NATURAL JOIN 
     calificacion;
-
---------------------------
-
+    
+--Obtener todos los viajes junto con los nombres de los pasajero y los vehiculos
 SELECT 
     viaje.id_viaje, 
+    pasajero.nombre AS pasajero, 
+    vehiculo.marca AS vehiculo
+FROM 
+    viaje
+NATURAL JOIN pasajero
+NATURAL JOIN vehiculo;
+
+--Mostrar información completa de los pagos asociados a viajes
+SELECT 
+    pago.id_pago, 
+    pago.monto, 
+    viaje.origen, 
+    viaje.destino
+FROM 
+    pago
+NATURAL JOIN viaje;
+
+
+
+-------------------------- LEFT JOIN--------------------------
+--Listar todos los pasajeros, incluso los que no tienen viajes registrados
+SELECT 
+    pasajero.nombre, 
+    viaje.id_viaje, 
+    viaje.origen
+FROM 
+    pasajero
+LEFT JOIN viaje 
+ON pasajero.id_pasajero = viaje.id_pasajero;
+
+--Mostrar todos los conductores, incluso aquellos que no tienen vehículos asociados
+
+SELECT 
+    conductor.nombre AS conductor, 
+    vehiculo.marca, 
+    vehiculo.modelo
+FROM 
+    conductor
+LEFT JOIN vehiculo 
+ON conductor.id_conductor = vehiculo.id_conductor;
+
+--Listar todos los vehículos, incluso aquellos que no han sido usados en viajes:
+SELECT 
+    vehiculo.marca, 
+    vehiculo.modelo, 
+    viaje.id_viaje
+FROM 
+    vehiculo
+LEFT JOIN viaje 
+ON vehiculo.id_vehiculo = viaje.id_vehiculo;
+
+--------------------------RIGHT JOIN--------------------
+
+--Listar todas las calificaciones, incluyendo viajes no calificados y mostrando información adicional del destino:
+SELECT 
+    calificacion.id_viaje, 
     viaje.origen, 
     viaje.destino, 
     calificacion.calificacion
 FROM 
-    viaje
-LEFT JOIN 
-    calificacion 
-ON 
-    viaje.id_viaje = calificacion.id_viaje;
+    calificacion
+RIGHT JOIN viaje ON calificacion.id_viaje = viaje.id_viaje;
 
---------------------------
-
+--Obtener conductores y su cantidad de viajes realizados, incluyendo conductores sin viajes:
 SELECT 
-    calificacion.id_viaje, 
-    calificacion.calificacion, 
+    conductor.nombre AS conductor, 
+    COUNT(viaje.id_viaje) AS total_viajes
+FROM 
+    viaje
+RIGHT JOIN vehiculo ON viaje.id_vehiculo = vehiculo.id_vehiculo
+RIGHT JOIN conductor ON vehiculo.id_conductor = conductor.id_conductor
+GROUP BY conductor.nombre;
+
+--Identificar los vehículos que no tienen viajes registrados:
+SELECT 
+    vehiculo.id_vehiculo, 
+    vehiculo.marca, 
+    vehiculo.modelo, 
+    COUNT(viaje.id_viaje) AS total_viajes
+FROM 
+    viaje
+RIGHT JOIN vehiculo ON viaje.id_vehiculo = vehiculo.id_vehiculo
+GROUP BY vehiculo.id_vehiculo, vehiculo.marca, vehiculo.modelo
+HAVING COUNT(viaje.id_viaje) = 0;
+
+--------------------------FULL JOIN------------------
+
+--Obtener la relación completa de pasajeros y viajes, indicando si hay pasajeros sin viajes o viajes sin pasajeros:
+SELECT 
+    pasajero.nombre AS pasajero, 
     viaje.origen, 
     viaje.destino
 FROM 
-    calificacion
-RIGHT JOIN 
-    viaje 
-ON 
-    calificacion.id_viaje = viaje.id_viaje;
+    pasajero
+FULL JOIN viaje ON pasajero.id_pasajero = viaje.id_pasajero
+ORDER BY pasajero.nombre;
 
---------------------------
-
+--Mostrar vehículos y sus viajes, incluyendo vehículos no utilizados y viajes sin vehículos asignados:
 SELECT 
-    vehiculo.placa AS vehiculo_placa, 
-    conductor.nombre AS conductor_nombre
+    vehiculo.marca, 
+    vehiculo.modelo, 
+    viaje.origen, 
+    viaje.destino
 FROM 
     vehiculo
-FULL JOIN 
-    conductor 
-ON 
-    vehiculo.id_conductor = conductor.id_conductor;
+FULL JOIN viaje ON vehiculo.id_vehiculo = viaje.id_vehiculo
+ORDER BY vehiculo.marca;
+
+--Listar todas las calificaciones y los viajes relacionados, incluyendo viajes sin calificaciones y calificaciones no asociadas a un viaje:
+SELECT 
+    viaje.id_viaje, 
+    viaje.origen, 
+    calificacion.calificacion
+FROM 
+    viaje
+FULL JOIN calificacion ON viaje.id_viaje = calificacion.id_viaje
+ORDER BY viaje.id_viaje;
 
 
 
@@ -604,12 +769,134 @@ GROUP BY
 ORDER BY 
     total_vehiculos DESC;
 
+------------------------
+
+--Maurizio consultas group by y having--
+
+SELECT 
+    c.nombre AS conductor_nombre,
+    COUNT(v.id_viaje) AS total_viajes
+FROM conductor c
+JOIN vehiculo vh ON c.id_conductor = vh.id_conductor
+JOIN viaje v ON vh.id_vehiculo = v.id_vehiculo
+GROUP BY c.nombre
+HAVING COUNT(v.id_viaje) > 5;
+--------------------------
+SELECT 
+    vh.marca AS vehiculo_marca,
+    vh.modelo AS vehiculo_modelo,
+    SUM(pg.monto) AS total_ingresos
+FROM vehiculo vh
+JOIN viaje v ON vh.id_vehiculo = v.id_vehiculo
+JOIN pago pg ON v.id_viaje = pg.id_viaje
+GROUP BY vh.marca, vh.modelo
+HAVING SUM(pg.monto) > 500;
+------------------------------ 
+SELECT 
+    p.nombre AS pasajero_nombre,
+    AVG(c.calificacion) AS promedio_calificacion
+FROM pasajero p
+JOIN viaje v ON p.id_pasajero = v.id_pasajero
+JOIN calificacion c ON v.id_viaje = c.id_viaje
+GROUP BY p.nombre
+HAVING AVG(c.calificacion) > 4;
+-------------------------------
+SELECT 
+    v.destino,
+    COUNT(v.id_viaje) AS total_viajes
+FROM viaje v
+GROUP BY v.destino
+HAVING COUNT(v.id_viaje) > 3;
+------------------------------------
+
+
 
 
 ---------------------------------CREACION DE VISTAS-----------------------------------
 
+-- Maurizio resumen_viajes_pasajero--
+
+CREATE VIEW resumen_viajes_pasajero AS
+SELECT 
+    p.nombre AS pasajero_nombre,
+    COUNT(v.id_viaje) AS total_viajes,
+    SUM(pg.monto) AS monto_total_pagado,
+    AVG(c.calificacion) AS promedio_calificacion
+FROM pasajero p
+LEFT JOIN viaje v ON p.id_pasajero = v.id_pasajero
+LEFT JOIN pago pg ON v.id_viaje = pg.id_viaje
+LEFT JOIN calificacion c ON v.id_viaje = c.id_viaje
+GROUP BY p.nombre;
 
 
+
+
+-- Maurizio vehiculos_sin_viajes --
+
+CREATE VIEW vehiculos_sin_viajes AS
+SELECT 
+    v.marca,
+    v.modelo,
+    v.placa
+FROM vehiculo v
+LEFT JOIN viaje vi ON v.id_vehiculo = vi.id_vehiculo
+WHERE vi.id_vehiculo IS NULL;
+
+
+-- Maurizio ingresos_por_conductor ---
+
+CREATE VIEW ingresos_por_conductor AS
+SELECT 
+    c.nombre AS conductor_nombre,
+    SUM(pg.monto) AS total_ingresos,
+    COUNT(v.id_viaje) AS total_viajes
+FROM conductor c
+JOIN vehiculo vh ON c.id_conductor = vh.id_conductor
+JOIN viaje v ON vh.id_vehiculo = v.id_vehiculo
+JOIN pago pg ON v.id_viaje = pg.id_viaje
+GROUP BY c.nombre;
+
+
+-- Maurizio viajes_sin_calificar --
+
+CREATE VIEW viajes_sin_calificar AS
+SELECT 
+    v.id_viaje,
+    v.origen,
+    v.destino,
+    v.fecha
+FROM viaje v
+LEFT JOIN calificacion c ON v.id_viaje = c.id_viaje
+WHERE c.id_viaje IS NULL;
+
+-- Maurizio pagos_pendientes --
+
+CREATE VIEW pagos_pendientes AS
+SELECT 
+    v.id_viaje,
+    v.origen,
+    v.destino,
+    v.fecha,
+    pg.monto
+FROM viaje v
+LEFT JOIN pago pg ON v.id_viaje = pg.id_viaje
+WHERE pg.id_pago IS NULL;
+
+
+-- Maurizio rendimiento_conductores --
+
+CREATE VIEW rendimiento_conductores AS
+SELECT 
+    c.nombre AS conductor_nombre,
+    AVG(ca.calificacion) AS promedio_calificacion,
+    AVG(v.duracion) AS duracion_promedio
+FROM conductor c
+JOIN vehiculo vh ON c.id_conductor = vh.id_conductor
+JOIN viaje v ON vh.id_vehiculo = v.id_vehiculo
+JOIN calificacion ca ON v.id_viaje = ca.id_viaje
+GROUP BY c.nombre;
+
+------------------------------------------------------
     CREATE VIEW resumen_viajes_conductor AS 
 SELECT 
     conductor.nombre AS conductor_nombre, 
@@ -624,7 +911,6 @@ JOIN
     viaje ON viaje.id_vehiculo = vehiculo.id_vehiculo 
 GROUP BY 
     conductor.nombre;
-
 --------------------------
 
 SELECT * FROM resumen_viajes_conductor;
@@ -726,6 +1012,10 @@ WHERE
     pago.fecha_pago IS NULL 
 ORDER BY 
     viaje.id_viaje;
+
+--------------------------
+
+SELECT * FROM viajes_pendientes_pago;
 
 --------------------------
 

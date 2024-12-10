@@ -1,1 +1,535 @@
+-------INGRESO A LA BASE DE DATOS YA CREADA EN EL ANTERIOR PROYECTO------------
 
+sudo -i -u postgres
+psql
+\c app_taxi_db;
+
+--------CREACION DE TABLAS EXTRAS PARA FORMALIZAR 1NF,2NF,3NF-----------------
+
+
+CREATE TABLE viaje_detallado (
+    id_viaje_detallado SERIAL PRIMARY KEY,
+    fecha_hora TIMESTAMP,
+    origen VARCHAR(255),
+    destino VARCHAR(255),
+    pasajero_info TEXT,
+    conductor_info TEXT,
+    vehiculo_info TEXT,
+    monto DECIMAL(10, 2),
+    metodo_pago VARCHAR(50),
+    calificacion INT,
+    comentarios TEXT
+);
+
+INSERT INTO viaje_detallado (fecha_hora, origen, destino, pasajero_info, conductor_info, vehiculo_info, monto, metodo_pago, calificacion, comentarios)
+VALUES 
+('2024-01-01 10:00:00', 'Calle A', 'Calle B', 'Juan Pérez,123456789', 'Carlos Ruiz,987654321', 'Toyota,Corolla,ABC123', 25.50, 'Tarjeta', 5, 'Excelente servicio'),
+('2024-01-02 15:30:00', 'Calle C', 'Calle D', 'María López,234567890', 'Ana García,876543210', 'Honda,Civic,XYZ789', 30.00, 'Efectivo', 4, 'Buen viaje');
+
+CREATE TABLE reserva_evento (
+    id_reserva SERIAL PRIMARY KEY,
+    fecha_evento DATE,
+    tipo_evento VARCHAR(100),
+    cliente_nombre VARCHAR(100),
+    cliente_telefono VARCHAR(20),
+    cantidad_vehiculos INT,
+    vehiculos_asignados TEXT,
+    monto_total DECIMAL(10, 2)
+);
+
+INSERT INTO reserva_evento (fecha_evento, tipo_evento, cliente_nombre, cliente_telefono, cantidad_vehiculos, vehiculos_asignados, monto_total)
+VALUES 
+('2024-02-15', 'Boda', 'Pedro Gómez', '555-1234', 3, 'ABC123,XYZ789,DEF456', 150.00),
+('2024-03-20', 'Conferencia', 'Empresa XYZ', '555-5678', 2, 'GHI789,JKL012', 100.00);
+
+CREATE TABLE mantenimiento_vehiculo (
+    id_mantenimiento SERIAL PRIMARY KEY,
+    fecha_mantenimiento DATE,
+    vehiculo_placa VARCHAR(20),
+    tipo_mantenimiento VARCHAR(100),
+    costo DECIMAL(10, 2),
+    mecanico_nombre VARCHAR(100),
+    mecanico_especialidad VARCHAR(100),
+    taller_nombre VARCHAR(100),
+    taller_direccion VARCHAR(255),
+    taller_telefono VARCHAR(20)
+);
+
+INSERT INTO mantenimiento_vehiculo (fecha_mantenimiento, vehiculo_placa, tipo_mantenimiento, costo, mecanico_nombre, mecanico_especialidad, taller_nombre, taller_direccion, taller_telefono)
+VALUES 
+('2024-04-10', 'ABC123', 'Cambio de aceite', 50.00, 'Luis Martínez', 'Mecánica general', 'Taller Rápido', 'Calle Principal 123', '555-9876'),
+('2024-04-15', 'XYZ789', 'Alineación', 80.00, 'Ana Rodríguez', 'Alineación y balanceo', 'Taller Rápido', 'Calle Principal 123', '555-9876');
+
+
+-----------------NORMALIZACION A 1NF--------------------------------
+
+
+CREATE TABLE viaje_detallado_1nf (
+    id_viaje_detallado SERIAL PRIMARY KEY,
+    fecha_hora TIMESTAMP,
+    origen VARCHAR(255),
+    destino VARCHAR(255),
+    pasajero_nombre VARCHAR(100),
+    pasajero_telefono VARCHAR(20),
+    conductor_nombre VARCHAR(100),
+    conductor_telefono VARCHAR(20),
+    vehiculo_marca VARCHAR(50),
+    vehiculo_modelo VARCHAR(50),
+    vehiculo_placa VARCHAR(20),
+    monto DECIMAL(10, 2),
+    metodo_pago VARCHAR(50),
+    calificacion INT,
+    comentarios TEXT
+);
+
+INSERT INTO viaje_detallado_1nf (fecha_hora, origen, destino, pasajero_nombre, pasajero_telefono, conductor_nombre, conductor_telefono, vehiculo_marca, vehiculo_modelo, vehiculo_placa, monto, metodo_pago, calificacion, comentarios)
+VALUES 
+('2024-01-01 10:00:00', 'Calle A', 'Calle B', 'Juan Pérez', '123456789', 'Carlos Ruiz', '987654321', 'Toyota', 'Corolla', 'ABC123', 25.50, 'Tarjeta', 5, 'Excelente servicio'),
+('2024-01-02 15:30:00', 'Calle C', 'Calle D', 'María López', '234567890', 'Ana García', '876543210', 'Honda', 'Civic', 'XYZ789', 30.00, 'Efectivo', 4, 'Buen viaje');
+
+-----------------NORMALIZACION A 2NF--------------------------------
+
+
+CREATE TABLE reserva_evento_2nf (
+    id_reserva SERIAL PRIMARY KEY,
+    fecha_evento DATE,
+    tipo_evento VARCHAR(100),
+    cliente_nombre VARCHAR(100),
+    cliente_telefono VARCHAR(20),
+    cantidad_vehiculos INT,
+    monto_total DECIMAL(10, 2)
+);
+
+CREATE TABLE vehiculos_reserva_2nf (
+    id_vehiculo_reserva SERIAL PRIMARY KEY,
+    id_reserva INT,
+    vehiculo_placa VARCHAR(20),
+    FOREIGN KEY (id_reserva) REFERENCES reserva_evento_2nf(id_reserva)
+);
+
+INSERT INTO reserva_evento_2nf (fecha_evento, tipo_evento, cliente_nombre, cliente_telefono, cantidad_vehiculos, monto_total)
+VALUES 
+('2024-02-15', 'Boda', 'Pedro Gómez', '555-1234', 3, 150.00),
+('2024-03-20', 'Conferencia', 'Empresa XYZ', '555-5678', 2, 100.00);
+
+INSERT INTO vehiculos_reserva_2nf (id_reserva, vehiculo_placa)
+VALUES 
+(1, 'ABC123'), (1, 'XYZ789'), (1, 'DEF456'),
+(2, 'GHI789'), (2, 'JKL012');
+
+
+
+-----------------NORMALIZACION A 3NF--------------------------------
+
+CREATE TABLE mantenimiento_vehiculo_3nf (
+    id_mantenimiento SERIAL PRIMARY KEY,
+    fecha_mantenimiento DATE,
+    vehiculo_placa VARCHAR(20),
+    tipo_mantenimiento VARCHAR(100),
+    costo DECIMAL(10, 2),
+    id_mecanico INT,
+    id_taller INT
+);
+
+CREATE TABLE mecanico_3nf (
+    id_mecanico SERIAL PRIMARY KEY,
+    nombre VARCHAR(100),
+    especialidad VARCHAR(100)
+);
+
+CREATE TABLE taller_3nf (
+    id_taller SERIAL PRIMARY KEY,
+    nombre VARCHAR(100),
+    direccion VARCHAR(255),
+    telefono VARCHAR(20)
+);
+
+INSERT INTO mecanico_3nf (nombre, especialidad)
+VALUES 
+('Luis Martínez', 'Mecánica general'),
+('Ana Rodríguez', 'Alineación y balanceo');
+
+INSERT INTO taller_3nf (nombre, direccion, telefono)
+VALUES 
+('Taller Rápido', 'Calle Principal 123', '555-9876');
+
+INSERT INTO mantenimiento_vehiculo_3nf (fecha_mantenimiento, vehiculo_placa, tipo_mantenimiento, costo, id_mecanico, id_taller)
+VALUES 
+('2024-04-10', 'ABC123', 'Cambio de aceite', 50.00, 1, 1),
+('2024-04-15', 'XYZ789', 'Alineación', 80.00, 2, 1);
+
+
+-------------------------INGRESO DE TUPLAS A LAS TABLAS EXTRAS QUE AHORA ESTAN NORMALIZADAS---------------------------------
+
+
+
+    INSERT INTO viaje_detallado_1nf (fecha_hora, origen, destino, pasajero_nombre, pasajero_telefono, conductor_nombre, conductor_telefono, vehiculo_marca, vehiculo_modelo, vehiculo_placa, monto, metodo_pago, calificacion, comentarios)
+VALUES 
+('2024-01-01 10:00:00', 'Calle A', 'Calle B', 'Juan Pérez', '123456789', 'Carlos Ruiz', '987654321', 'Toyota', 'Corolla', 'ABC123', 25.50, 'Tarjeta', 5, 'Excelente servicio'),
+('2024-01-02 15:30:00', 'Calle C', 'Calle D', 'María López', '234567890', 'Ana García', '876543210', 'Honda', 'Civic', 'XYZ789', 30.00, 'Efectivo', 4, 'Buen viaje'),
+('2024-01-03 09:15:00', 'Av. Principal', 'Plaza Central', 'Pedro Gómez', '345678901', 'Luis Torres', '765432109', 'Nissan', 'Sentra', 'DEF456', 22.75, 'Tarjeta', 4, 'Conductor puntual'),
+('2024-01-04 18:45:00', 'Parque Industrial', 'Centro Comercial', 'Ana Martínez', '456789012', 'Jorge Sánchez', '654321098', 'Chevrolet', 'Spark', 'GHI789', 18.50, 'Efectivo', 3, 'Tráfico pesado'),
+('2024-01-05 11:30:00', 'Universidad', 'Biblioteca', 'Carlos Rodríguez', '567890123', 'María Fernández', '543210987', 'Kia', 'Rio', 'JKL012', 15.25, 'Tarjeta', 5, 'Muy amable'),
+('2024-01-06 14:00:00', 'Hospital', 'Aeropuerto', 'Laura Sánchez', '678901234', 'Roberto Gómez', '432109876', 'Hyundai', 'Accent', 'MNO345', 35.00, 'Tarjeta', 4, 'Viaje cómodo'),
+('2024-01-07 20:30:00', 'Estadio', 'Hotel Central', 'Diego Fernández', '789012345', 'Carmen López', '321098765', 'Ford', 'Fiesta', 'PQR678', 28.75, 'Efectivo', 4, 'Buen conocimiento de la ruta'),
+('2024-01-08 08:45:00', 'Terminal de Buses', 'Oficina', 'Sofía Torres', '890123456', 'Javier Martínez', '210987654', 'Volkswagen', 'Gol', 'STU901', 20.50, 'Tarjeta', 3, 'Algo de retraso'),
+('2024-01-09 12:15:00', 'Centro de Convenciones', 'Restaurante', 'Gabriel Herrera', '901234567', 'Patricia Díaz', '109876543', 'Mazda', '2', 'VWX234', 17.25, 'Efectivo', 5, 'Excelente conversación'),
+('2024-01-10 16:30:00', 'Playa', 'Hotel', 'Valentina Morales', '012345678', 'Eduardo Vargas', '098765432', 'Suzuki', 'Swift', 'YZA567', 40.00, 'Tarjeta', 4, 'Vehículo muy limpio'),
+('2024-01-11 07:00:00', 'Gimnasio', 'Oficina', 'Andrés Castro', '123456780', 'Isabel Rojas', '987654310', 'Renault', 'Logan', 'BCD890', 16.50, 'Efectivo', 4, 'Puntual y eficiente'),
+('2024-01-12 19:45:00', 'Cine', 'Residencia', 'Camila Vargas', '234567891', 'Fernando Mendoza', '876543210', 'Fiat', 'Uno', 'EFG123', 22.00, 'Tarjeta', 5, 'Conductor muy amable'),
+('2024-01-13 13:30:00', 'Supermercado', 'Casa', 'Ricardo Mendoza', '345678902', 'Lucía Herrera', '765432101', 'Chevrolet', 'Onix', 'HIJ456', 19.75, 'Efectivo', 3, 'Ruta un poco larga'),
+('2024-01-14 10:45:00', 'Escuela', 'Parque', 'Daniela Rojas', '456789013', 'Gustavo Silva', '654321092', 'Toyota', 'Yaris', 'KLM789', 14.50, 'Tarjeta', 4, 'Viaje tranquilo'),
+('2024-01-15 17:15:00', 'Museo', 'Estación de Tren', 'Javier Paz', '567890124', 'Adriana Morales', '543210983', 'Nissan', 'Versa', 'NOP012', 26.25, 'Efectivo', 5, 'Excelente manejo');
+INSERT INTO reserva_evento_2nf (fecha_evento, tipo_evento, cliente_nombre, cliente_telefono, cantidad_vehiculos, monto_total)
+VALUES 
+('2024-02-15', 'Boda', 'Pedro Gómez', '555-1234', 3, 150.00),
+('2024-03-20', 'Conferencia', 'Empresa XYZ', '555-5678', 2, 100.00),
+('2024-04-10', 'Cumpleaños', 'María Rodríguez', '555-2345', 1, 50.00),
+('2024-05-05', 'Graduación', 'Universidad ABC', '555-3456', 5, 250.00),
+('2024-06-15', 'Concierto', 'Productora Musical', '555-4567', 10, 500.00),
+('2024-07-01', 'Feria', 'Municipalidad', '555-5678', 8, 400.00),
+('2024-08-12', 'Boda', 'Ana y Juan', '555-6789', 4, 200.00),
+('2024-09-23', 'Congreso', 'Asociación Médica', '555-7890', 6, 300.00),
+('2024-10-31', 'Fiesta de Halloween', 'Club Nocturno', '555-8901', 5, 250.00),
+('2024-11-15', 'Lanzamiento de Producto', 'Tech Inc.', '555-9012', 3, 150.00),
+('2024-12-24', 'Cena de Navidad', 'Empresa ABC', '555-0123', 7, 350.00),
+('2025-01-01', 'Fiesta de Año Nuevo', 'Hotel Estrella', '555-1234', 15, 750.00),
+('2025-02-14', 'San Valentín', 'Restaurante Amor', '555-2345', 10, 500.00),
+('2025-03-17', 'Desfile de San Patricio', 'Comunidad Irlandesa', '555-3456', 6, 300.00),
+('2025-04-22', 'Día de la Tierra', 'ONG Ecológica', '555-4567', 4, 200.00);
+INSERT INTO vehiculos_reserva_2nf (id_reserva, vehiculo_placa)
+VALUES 
+(1, 'ABC123'), (1, 'XYZ789'), (1, 'DEF456'),
+(2, 'GHI789'), (2, 'JKL012'),
+(3, 'MNO345'),
+(4, 'PQR678'), (4, 'STU901'), (4, 'VWX234'), (4, 'YZA567'), (4, 'BCD890'),
+(5, 'EFG123'), (5, 'HIJ456'), (5, 'KLM789'), (5, 'NOP012'), (5, 'QRS345'),
+(5, 'TUV678'), (5, 'WXY901'), (5, 'ZAB234'), (5, 'CDE567'),
+(6, 'FGH890'), (6, 'IJK123'), (6, 'LMN456'), (6, 'OPQ789'), (6, 'RST012'),
+(6, 'UVW345'), (6, 'XYZ678'), (6, 'ABC901'),
+(7, 'DEF234'), (7, 'GHI567'), (7, 'JKL890'), (7, 'MNO123'),
+(8, 'PQR456'), (8, 'STU789'), (8, 'VWX012'), (8, 'YZA345'), (8, 'BCD678'), (8, 'EFG901'),
+(9, 'HIJ234'), (9, 'KLM567'), (9, 'NOP890'), (9, 'QRS123'), (9, 'TUV456'),
+(10, 'WXY789'), (10, 'ZAB012'), (10, 'CDE345'),
+(11, 'FGH678'), (11, 'IJK901'), (11, 'LMN234'), (11, 'OPQ567'), (11, 'RST890'),
+(11, 'UVW123'), (11, 'XYZ456'),
+(12, 'ABC789'), (12, 'DEF012'), (12, 'GHI345'), (12, 'JKL678'), (12, 'MNO901'),
+(12, 'PQR234'), (12, 'STU567'), (12, 'VWX890'), (12, 'YZA123'), (12, 'BCD456'),
+(12, 'EFG789'), (12, 'HIJ012'), (12, 'KLM345'), (12, 'NOP678'),
+(13, 'QRS901'), (13, 'TUV234'), (13, 'WXY567'), (13, 'ZAB890'), (13, 'CDE123'),
+(13, 'FGH456'), (13, 'IJK789'), (13, 'LMN012'), (13, 'OPQ345'), (13, 'RST678'),
+(14, 'UVW901'), (14, 'XYZ234'), (14, 'ABC567'), (14, 'DEF890'), (14, 'GHI123'), (14, 'JKL456'),
+(15, 'MNO789'), (15, 'PQR012'), (15, 'STU345'), (15, 'VWX678');
+INSERT INTO mantenimiento_vehiculo_3nf (fecha_mantenimiento, vehiculo_placa, tipo_mantenimiento, costo, id_mecanico, id_taller)
+VALUES 
+('2024-04-10', 'ABC123', 'Cambio de aceite', 50.00, 1, 1),
+('2024-04-15', 'XYZ789', 'Alineación', 80.00, 2, 1),
+('2024-04-20', 'DEF456', 'Cambio de frenos', 120.00, 1, 1),
+('2024-04-25', 'GHI789', 'Revisión general', 100.00, 2, 1),
+('2024-05-01', 'JKL012', 'Cambio de filtros', 60.00, 1, 1),
+('2024-05-05', 'MNO345', 'Rotación de neumáticos', 40.00, 2, 1),
+('2024-05-10', 'PQR678', 'Cambio de bujías', 70.00, 1, 1),
+('2024-05-15', 'STU901', 'Cambio de batería', 150.00, 2, 1),
+('2024-05-20', 'VWX234', 'Reparación de alternador', 200.00, 1, 1),
+('2024-05-25', 'YZA567', 'Cambio de correa de distribución', 250.00, 2, 1),
+('2024-06-01', 'BCD890', 'Cambio de amortiguadores', 300.00, 1, 1),
+('2024-06-05', 'EFG123', 'Reparación de aire acondicionado', 180.00, 2, 1),
+('2024-06-10', 'HIJ456', 'Cambio de embrague', 350.00, 1, 1),
+('2024-06-15', 'KLM789', 'Afinación de motor', 150.00, 2, 1),
+('2024-06-20', 'NOP012', 'Cambio de radiador', 220.00, 1, 1); 
+INSERT INTO mecanico_3nf (nombre, especialidad)
+VALUES 
+('Juan Morales', 'Reparación de motores'),
+('Sofía Torres', 'Frenos y suspensión'),
+('Ricardo Castillo', 'Mantenimiento preventivo'),
+('Lucía Gutiérrez', 'Diagnóstico computarizado'),
+('Alberto Ramírez', 'Carrocería y pintura'),
+('Fernanda Vega', 'Alineación y balanceo'),
+('Diego Sánchez', 'Sistemas eléctricos'),
+('Mariana López', 'Mecánica general'),
+('Andrés Ríos', 'Reparación de transmisiones'),
+('Gabriela Pérez', 'Refrigeración automotriz'),
+('Francisco Herrera', 'Lubricación y filtros'),
+('Paola Jiménez', 'Cambio de llantas'),
+('Miguel Vargas', 'Reparación de alternadores'),
+('Laura Díaz', 'Sistema de escape'),
+('Roberto Paredes', 'Ajuste de válvulas');
+INSERT INTO taller_3nf (nombre, direccion, telefono)
+VALUES 
+('Mecánica Integral', 'Av. Perú 123', '555-6789'),
+('Ruedas y Más', 'Calle Los Olivos 456', '555-7890'),
+('Taller Central', 'Av. Central 789', '555-8901'),
+('Frenos Exprés', 'Calle Bolívar 101', '555-9012'),
+('Motores al Día', 'Av. El Sol 202', '555-0123'),
+('Suspensiones Perfectas', 'Calle Miraflores 303', '555-1234'),
+('Carrocerías Limpias', 'Av. Las Palmas 404', '555-2345'),
+('Alineaciones Pro', 'Calle Los Laureles 505', '555-3456'),
+('Motor y Más', 'Av. Primavera 606', '555-4567'),
+('Sistema Eléctrico Exprés', 'Calle El Roble 707', '555-5678'),
+('Diagnósticos Precisos', 'Av. Arenales 808', '555-6789'),
+('Taller del Norte', 'Calle Independencia 909', '555-7890'),
+('Mecánica Sur', 'Av. San Juan 1010', '555-8901'),
+('Taller Rápido Fix', 'Calle Progreso 1111', '555-9012'),
+('AutoTech Pro', 'Av. Libertad 1212', '555-0123');
+
+
+----------------------------CONSULTAS AVANZADAS CON JOIN--------------------------------------
+
+
+  SELECT 
+    viaje.id_viaje, 
+    viaje.origen, 
+    viaje.destino, 
+    calificacion.calificacion
+FROM 
+    viaje 
+NATURAL JOIN 
+    calificacion;
+
+--------------------------
+
+SELECT 
+    viaje.id_viaje, 
+    viaje.origen, 
+    viaje.destino, 
+    calificacion.calificacion
+FROM 
+    viaje
+LEFT JOIN 
+    calificacion 
+ON 
+    viaje.id_viaje = calificacion.id_viaje;
+
+--------------------------
+
+SELECT 
+    calificacion.id_viaje, 
+    calificacion.calificacion, 
+    viaje.origen, 
+    viaje.destino
+FROM 
+    calificacion
+RIGHT JOIN 
+    viaje 
+ON 
+    calificacion.id_viaje = viaje.id_viaje;
+
+--------------------------
+
+SELECT 
+    vehiculo.placa AS vehiculo_placa, 
+    conductor.nombre AS conductor_nombre
+FROM 
+    vehiculo
+FULL JOIN 
+    conductor 
+ON 
+    vehiculo.id_conductor = conductor.id_conductor;
+
+
+
+----------------------------CONSULTAS CON GROUP BY Y HAVING-------------------------------------------
+
+
+    SELECT 
+    viaje.origen, 
+    COUNT(viaje.id_viaje) AS total_viajes 
+FROM 
+    viaje 
+GROUP BY 
+    viaje.origen 
+ORDER BY 
+    total_viajes DESC;
+
+--------------------------
+
+SELECT 
+    conductor.nombre, 
+    SUM(pago.monto) AS total_ingresos 
+FROM 
+    conductor 
+JOIN 
+    vehiculo ON conductor.id_conductor = vehiculo.id_conductor 
+JOIN 
+    viaje ON vehiculo.id_vehiculo = viaje.id_vehiculo 
+JOIN 
+    pago ON viaje.id_viaje = pago.id_viaje 
+GROUP BY 
+    conductor.nombre;
+
+--------------------------
+
+SELECT 
+    pago.metodo_pago, 
+    SUM(pago.monto) AS total_pagado 
+FROM 
+    pago 
+GROUP BY 
+    pago.metodo_pago;
+
+--------------------------
+
+SELECT 
+    viaje.id_viaje, 
+    AVG(calificacion.calificacion) AS promedio_calificacion 
+FROM 
+    viaje 
+JOIN 
+    calificacion ON viaje.id_viaje = calificacion.id_viaje 
+GROUP BY 
+    viaje.id_viaje 
+HAVING 
+    AVG(calificacion.calificacion) > 4;
+
+--------------------------
+
+SELECT 
+    conductor.nombre, 
+    MAX(viaje.duracion) AS duracion_maxima 
+FROM 
+    viaje 
+JOIN 
+    vehiculo ON viaje.id_vehiculo = vehiculo.id_vehiculo 
+JOIN 
+    conductor ON vehiculo.id_conductor = conductor.id_conductor 
+GROUP BY 
+    conductor.nombre;
+
+--------------------------
+
+SELECT 
+    vehiculo.modelo, 
+    COUNT(vehiculo.id_vehiculo) AS total_vehiculos 
+FROM 
+    vehiculo 
+GROUP BY 
+    vehiculo.modelo 
+ORDER BY 
+    total_vehiculos DESC;
+
+
+
+---------------------------------CREACION DE VISTAS-----------------------------------
+
+
+
+    CREATE VIEW resumen_viajes_conductor AS 
+SELECT 
+    conductor.nombre AS conductor_nombre, 
+    COUNT(viaje.id_viaje) AS total_viajes, 
+    AVG(viaje.duracion) AS duracion_promedio, 
+    COUNT(DISTINCT viaje.id_pasajero) AS total_pasajeros 
+FROM 
+    conductor 
+JOIN 
+    vehiculo ON vehiculo.id_conductor = conductor.id_conductor 
+JOIN 
+    viaje ON viaje.id_vehiculo = vehiculo.id_vehiculo 
+GROUP BY 
+    conductor.nombre;
+
+--------------------------
+
+SELECT * FROM resumen_viajes_conductor;
+
+--------------------------
+
+CREATE VIEW viajes_largos_conductor AS 
+SELECT 
+    conductor.nombre AS conductor_nombre, 
+    viaje.id_viaje, 
+    viaje.origen, 
+    viaje.destino, 
+    viaje.duracion 
+FROM 
+    conductor 
+JOIN 
+    vehiculo ON vehiculo.id_conductor = conductor.id_conductor 
+JOIN 
+    viaje ON viaje.id_vehiculo = vehiculo.id_vehiculo 
+WHERE 
+    viaje.duracion = (SELECT MAX(duracion) FROM viaje WHERE id_vehiculo = vehiculo.id_vehiculo) 
+ORDER BY 
+    conductor.nombre;
+
+--------------------------
+
+SELECT * FROM viajes_largos_conductor;
+
+--------------------------
+
+CREATE VIEW pagos_totales_metodo AS 
+SELECT 
+    pago.metodo_pago, 
+    SUM(pago.monto) AS monto_total 
+FROM 
+    pago 
+GROUP BY 
+    pago.metodo_pago;
+
+--------------------------
+
+SELECT * FROM pagos_totales_metodo;
+
+--------------------------
+
+CREATE VIEW promedio_calificacion_conductor AS 
+SELECT 
+    conductor.nombre AS conductor_nombre, 
+    AVG(calificacion.calificacion) AS promedio_calificacion 
+FROM 
+    conductor 
+JOIN 
+    vehiculo ON vehiculo.id_conductor = conductor.id_conductor 
+JOIN 
+    viaje ON viaje.id_vehiculo = vehiculo.id_vehiculo 
+JOIN 
+    calificacion ON calificacion.id_viaje = viaje.id_viaje 
+GROUP BY 
+    conductor.nombre 
+HAVING 
+    AVG(calificacion.calificacion) > 4;
+
+--------------------------
+
+SELECT * FROM promedio_calificacion_conductor;
+
+--------------------------
+
+CREATE VIEW reservas_evento_cliente AS 
+SELECT 
+    reserva_evento.cliente_nombre, 
+    reserva_evento.tipo_evento, 
+    COUNT(reserva_evento.id_reserva) AS total_reservas 
+FROM 
+    reserva_evento 
+GROUP BY 
+    reserva_evento.cliente_nombre, reserva_evento.tipo_evento 
+HAVING 
+    COUNT(reserva_evento.id_reserva) > 2;
+
+--------------------------
+
+SELECT * FROM reservas_evento_cliente;
+
+--------------------------
+
+CREATE VIEW viajes_pendientes_pago AS 
+SELECT 
+    viaje.id_viaje, 
+    viaje.origen, 
+    viaje.destino, 
+    pago.monto, 
+    pago.fecha_pago 
+FROM 
+    viaje 
+JOIN 
+    pago ON pago.id_viaje = viaje.id_viaje 
+WHERE 
+    pago.fecha_pago IS NULL 
+ORDER BY 
+    viaje.id_viaje;
+
+--------------------------
+
+SELECT * FROM viajes_pendientes_pago;

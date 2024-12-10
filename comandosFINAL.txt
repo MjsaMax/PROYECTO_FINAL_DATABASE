@@ -1,3 +1,200 @@
+----------------------------------CREACION DE BASE DE DATOS Y TUPLAS DEL ANTERIOR PROYECTO-----------------------------
+sudo -i -u postgres
+psql
+CREATE DATABASE app_taxi_db;
+\c app_taxi_db;
+CREATE TABLE pasajero (
+	id_pasajero SERIAL PRIMARY KEY,
+	nombre VARCHAR(100) NOT NULL,
+	telefono VARCHAR(15) NOT NULL,
+	correo_electronico VARCHAR(100) NOT NULL,
+	direccion VARCHAR(255) NOT NULL
+	);
+	
+CREATE TABLE conductor (
+	id_conductor SERIAL PRIMARY KEY,
+	nombre VARCHAR(100) NOT NULL,
+	telefono VARCHAR(15) NOT NULL,
+	licencia VARCHAR(10) NOT NULL
+	);
+	
+CREATE TABLE vehiculo (
+	id_vehiculo SERIAL PRIMARY KEY,
+	id_conductor INT NOT NULL,
+	marca VARCHAR(15) NOT NULL,
+	modelo VARCHAR(15) NOT NULL,
+	ano INT NOT NULL,
+	placa VARCHAR(6) NOT NULL,
+	
+	FOREIGN KEY (id_conductor) REFERENCES conductor(id_conductor)
+	);
+	
+CREATE TABLE viaje (
+	id_viaje SERIAL PRIMARY KEY,
+	id_pasajero INT NOT NULL,
+	id_vehiculo INT NOT NULL,
+	origen VARCHAR(255) NOT NULL,
+	destino VARCHAR(255) NOT NULL,
+	fecha TIMESTAMP NOT NULL,
+	Duracion TIME,
+	
+	FOREIGN KEY (id_pasajero) REFERENCES pasajero(id_pasajero),
+	FOREIGN KEY (id_vehiculo) REFERENCES vehiculo(id_vehiculo)
+	);
+	
+CREATE TABLE pago (
+	id_pago SERIAL PRIMARY KEY,
+	id_viaje INT NOT NULL,
+	monto DECIMAL(10,2) NOT NULL,
+	metodo_pago VARCHAR(50) NOT NULL,
+	fecha_pago TIMESTAMP NOT NULL,
+	
+	FOREIGN KEY (id_viaje) REFERENCES viaje(id_viaje)
+);
+
+CREATE TABLE calificacion (
+	id_viaje INT NOT NULL,
+	calificacion INT NOT NULL,
+	comentario TEXT,
+	
+	FOREIGN KEY (id_viaje) REFERENCES viaje(id_viaje)
+	);
+	INSERT INTO pasajero (nombre, telefono, correo_electronico, direccion) VALUES
+('Juan Pérez', '1234567890', 'juan@example.com', 'Calle Falsa 123'),
+('María López', '0987654321', 'maria@example.com', 'Avenida Siempre Viva 742'),
+('Pedro García', '1122334455', 'pedro@example.com', 'Calle Luna 456'),
+('Ana Torres', '3344556677', 'ana@example.com', 'Calle Sol 789'),
+('Luis Sánchez', '4455667788', 'luis@example.com', 'Calle Estrella 101'),
+('Carlos Ramírez', '5566778899', 'carlos@example.com', 'Calle Nube 202'),
+('Laura Díaz', '6677889900', 'laura@example.com', 'Calle Viento 303'),
+('Julia Fernández', '7788990011', 'julia@example.com', 'Calle Trueno 404'),
+('Miguel Álvarez', '8899001122', 'miguel@example.com', 'Calle Relámpago 505'),
+('Teresa Vargas', '9900112233', 'teresa@example.com', 'Calle Nieve 606'),
+('Fernando Castillo', '1233211234', 'fernando@example.com', 'Calle Rayo 707'),
+('Andrea Márquez', '2344322345', 'andrea@example.com', 'Calle Fuego 808'),
+('David Herrera', '3455433456', 'david@example.com', 'Calle Tierra 909'),
+('Paula Medina', '4566544567', 'paula@example.com', 'Calle Agua 1010'),
+('Ricardo Ríos', '5677655678', 'ricardo@example.com', 'Calle Mar 1111'),
+('Mariana Paredes', '6788766789', 'mariana@example.com', 'Calle Río 1212'),
+('Tomás Ruiz', '7899877890', 'tomas@example.com', 'Calle Bosque 1313'),
+('Claudia Gómez', '8900988901', 'claudia@example.com', 'Calle Montaña 1414'),
+('Patricia Luna', '9012090123', 'patricia@example.com', 'Calle Valle 1515'),
+('Jorge Bravo', '0123201234', 'jorge@example.com', 'Calle Lago 1616');
+
+INSERT INTO conductor (nombre, telefono, licencia) VALUES
+('Carlos Rivera', '1122334455', 'ABC12345'),
+('Ana Gómez', '5566778899', 'XYZ67890'),
+('José Torres', '2233445566', 'DEF54321'),
+('Lucía Ramos', '6677889911', 'GHI98765'),
+('Marcos Peña', '7788990022', 'JKL13579'),
+('Verónica Flores', '8899001133', 'MNO97531'),
+('Oscar Navarro', '9900112244', 'PQR86420'),
+('Isabel Sánchez', '1010102020', 'STU10987'),
+('Javier Quispe', '1212123030', 'VWX65432'),
+('Sandra Salazar', '2323234040', 'YZA32109'),
+('Diego Chávez', '3434345050', 'BCD21098'),
+('Sofía Álvarez', '4545456060', 'EFG09876'),
+('Alberto Medina', '5656567070', 'HIJ98765'),
+('Beatriz Díaz', '6767678080', 'KLM87654'),
+('Ramiro Guzmán', '7878789090', 'NOP76543'),
+('Paola Vargas', '8989891010', 'QRS65432'),
+('Cristina Ríos', '9090901111', 'TUV54321'),
+('Manuel Paredes', '1011012121', 'WXY43210'),
+('Gonzalo Salas', '1111113131', 'ZAB32109'),
+('Sara Rodríguez', '1212124141', 'BCD21098');
+
+INSERT INTO vehiculo (id_conductor, marca, modelo, ano, placa) VALUES
+(1, 'Toyota', 'Corolla', 2020, 'XYZ123'),
+(2, 'Honda', 'Civic', 2019, 'ABC456'),
+(3, 'Ford', 'Focus', 2018, 'DEF789'),
+(4, 'Chevrolet', 'Spark', 2021, 'GHI012'),
+(5, 'Nissan', 'Versa', 2020, 'JKL345'),
+(6, 'Kia', 'Rio', 2019, 'MNO678'),
+(7, 'Hyundai', 'Accent', 2018, 'PQR901'),
+(8, 'Mazda', '3', 2021, 'STU234'),
+(9, 'Volkswagen', 'Jetta', 2020, 'VWX567'),
+(10, 'BMW', 'Series 3', 2019, 'YZA890'),
+(11, 'Mercedes', 'A-Class', 2018, 'BCD123'),
+(12, 'Audi', 'A4', 2021, 'EFG456'),
+(13, 'Renault', 'Duster', 2020, 'HIJ789'),
+(14, 'Jeep', 'Compass', 2019, 'KLM012'),
+(15, 'Subaru', 'Impreza', 2018, 'NOP345'),
+(16, 'Peugeot', '208', 2021, 'QRS678'),
+(17, 'Fiat', '500', 2020, 'TUV901'),
+(18, 'Opel', 'Astra', 2019, 'WXY234'),
+(19, 'Chevrolet', 'Onix', 2018, 'ZAB567'),
+(20, 'Ford', 'Fiesta', 2021, 'BCD890');
+
+INSERT INTO viaje (id_pasajero, id_vehiculo, origen, destino, fecha, duracion) VALUES
+(1, 1, 'Calle Falsa 123', 'Avenida Siempre Viva 742', '2024-10-30 10:00:00', '00:30:00'),
+(2, 2, 'Plaza Central', 'Estación Norte', '2024-10-30 11:00:00', '00:45:00'),
+(3, 3, 'Centro Comercial', 'Aeropuerto', '2024-10-30 12:00:00', '01:00:00'),
+(4, 4, 'Parque Principal', 'Universidad', '2024-10-30 13:00:00', '00:25:00'),
+(5, 5, 'Hospital', 'Hotel', '2024-10-30 14:00:00', '00:20:00'),
+(6, 6, 'Calle Sol 789', 'Estación Sur', '2024-10-30 15:00:00', '00:35:00'),
+(7, 7, 'Biblioteca', 'Museo', '2024-10-30 16:00:00', '00:15:00'),
+(8, 8, 'Parque Norte', 'Teatro', '2024-10-30 17:00:00', '00:40:00'),
+(9, 9, 'Centro Médico', 'Estadio', '2024-10-30 18:00:00', '00:55:00'),
+(10, 10, 'Banco', 'Estación Central', '2024-10-30 19:00:00', '00:50:00'),
+(11, 11, 'Escuela', 'Oficina', '2024-10-30 20:00:00', '00:30:00'),
+(12, 12, 'Parque Industrial', 'Zona Comercial', '2024-10-30 21:00:00', '00:20:00'),
+(13, 13, 'Terminal de Buses', 'Puerto', '2024-10-30 22:00:00', '00:25:00'),
+(14, 14, 'Estadio Sur', 'Centro', '2024-10-30 23:00:00', '00:45:00'),
+(15, 15, 'Teatro Nacional', 'Parque de la Amistad', '2024-10-31 00:00:00', '01:10:00'),
+(16, 16, 'Estación Norte', 'Plaza Central', '2024-10-31 01:00:00', '00:35:00'),
+(17, 17, 'Zoológico', 'Planetario', '2024-10-31 02:00:00', '00:50:00'),
+(18, 18, 'Museo de Arte', 'Centro Comercial', '2024-10-31 03:00:00', '00:55:00'),
+(19, 19, 'Hospital Central', 'Hotel Centro', '2024-10-31 04:00:00', '00:20:00'),
+(20, 20, 'Escuela de Artes', 'Universidad', '2024-10-31 05:00:00', '00:25:00');
+
+INSERT INTO pago (id_viaje, monto, metodo_pago, fecha_pago) VALUES
+(1, 25.50, 'Tarjeta de Crédito', '2024-10-30 10:30:00'),
+(2, 18.75, 'Efectivo', '2024-10-30 11:45:00'),
+(3, 40.00, 'Tarjeta de Débito', '2024-10-30 12:30:00'),
+(4, 15.25, 'Efectivo', '2024-10-30 13:25:00'),
+(5, 20.00, 'Tarjeta de Crédito', '2024-10-30 14:20:00'),
+(6, 22.50, 'Efectivo', '2024-10-30 15:35:00'),
+(7, 12.75, 'Tarjeta de Débito', '2024-10-30 16:15:00'),
+(8, 30.00, 'Tarjeta de Crédito', '2024-10-30 17:40:00'),
+(9, 50.00, 'Efectivo', '2024-10-30 18:55:00'),
+(10, 45.00, 'Tarjeta de Débito', '2024-10-30 19:50:00'),
+(11, 27.30, 'Tarjeta de Crédito', '2024-10-30 20:30:00'),
+(12, 19.50, 'Efectivo', '2024-10-30 21:20:00'),
+(13, 23.75, 'Tarjeta de Crédito', '2024-10-30 22:25:00'),
+(14, 29.90, 'Efectivo', '2024-10-30 23:45:00'),
+(15, 35.50, 'Tarjeta de Débito', '2024-10-31 00:10:00'),
+(16, 25.00, 'Tarjeta de Crédito', '2024-10-31 01:35:00'),
+(17, 47.50, 'Efectivo', '2024-10-31 02:50:00'),
+(18, 55.00, 'Tarjeta de Crédito', '2024-10-31 03:55:00'),
+(19, 17.25, 'Efectivo', '2024-10-31 04:20:00'),
+(20, 19.90, 'Tarjeta de Débito', '2024-10-31 05:25:00');
+
+INSERT INTO calificacion (id_viaje, calificacion, comentario) VALUES
+(1, 5, 'Excelente servicio'),
+(2, 4, 'Conductor amable'),
+(3, 3, 'Podría mejorar la puntualidad'),
+(4, 5, 'Muy rápido y amable'),
+(5, 2, 'Vehículo sucio'),
+(6, 5, 'Excelente manejo'),
+(7, 4, 'Buen servicio en general'),
+(8, 5, 'Conductor profesional'),
+(9, 4, 'Buena experiencia'),
+(10, 3, 'Falta de comunicación'),
+(11, 5, 'Conductor amigable'),
+(12, 2, 'Retraso en el viaje'),
+(13, 4, 'Satisfecho con el servicio'),
+(14, 5, 'Muy cómodo'),
+(15, 5, 'Excelente atención'),
+(16, 3, 'Podría ser más rápido'),
+(17, 5, 'Perfecto'),
+(18, 4, 'Conductor muy educado'),
+(19, 3, 'Servicio aceptable'),
+(20, 5, 'Muy satisfecho');
+\q
+exit
+
+
+
 -------INGRESO A LA BASE DE DATOS YA CREADA EN EL ANTERIOR PROYECTO------------
 
 sudo -i -u postgres

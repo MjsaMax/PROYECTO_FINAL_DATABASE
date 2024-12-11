@@ -193,6 +193,23 @@ INSERT INTO calificacion (id_viaje, calificacion, comentario) VALUES
 \q
 exit
 
+----- DATA PARA LAS VISTAS -------------
+
+-- Insertar viajes sin pagos registrados
+INSERT INTO viaje (id_pasajero, id_vehiculo, origen, destino, fecha, duracion)
+VALUES
+(1, 1, 'Plaza Norte', 'Centro Histórico', '2024-12-15 10:00:00', '00:30:00'),
+(2, 2, 'Estación Central', 'Parque Principal', '2024-12-16 12:00:00', '00:45:00'),
+(3, 3, 'Museo de Arte', 'Terminal de Buses', '2024-12-17 15:30:00', '01:00:00');
+
+
+
+-- Insertar viajes sin calificación registrada
+INSERT INTO viaje (id_pasajero, id_vehiculo, origen, destino, fecha, duracion)
+VALUES
+(4, 4, 'Aeropuerto', 'Hotel Centro', '2024-12-18 18:00:00', '00:35:00'),
+(5, 5, 'Hospital General', 'Estadio Nacional', '2024-12-19 20:15:00', '00:50:00');
+
 
 
 -------INGRESO A LA BASE DE DATOS YA CREADA EN EL ANTERIOR PROYECTO------------
